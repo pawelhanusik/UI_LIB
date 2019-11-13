@@ -64,6 +64,7 @@ class UI_Table{
 		
 		this.filters_inputs_visibility = false;
 		this.filters = [];
+		this.filteredData = [];
 	}
 	drawIntoTableId(emptyTableId = this.id){
 		let mainDiv = document.getElementById(emptyTableId);
@@ -106,7 +107,7 @@ class UI_Table{
 			}
 			ih += '</a>';
 			//filter's input
-			ih += '<input type="text" style="display: none;" value="' + this.get_filter(i) +'" onkeydown="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.filter();">';
+			ih += '<input type="text" style="display: none;" value="' + this.get_filter(i) +'" onchange="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.updateTable();">';
 			
 			let th = document.createElement("th");
 			th.innerHTML = ih;
@@ -131,7 +132,7 @@ class UI_Table{
 		this.change_page(this.show_page_no - 1);
 	}
 	change_page(newPage){
-		if( newPage >= 0 && newPage < Math.ceil(this.data.length / this.show_at_once) ){
+		if( newPage >= 0 && newPage < Math.ceil(this.filteredData.length / this.show_at_once) ){
 			this.show_page_no = newPage;
 			this.updateTable();
 		}
@@ -194,23 +195,24 @@ class UI_Table{
 	}
 	
 	filter(){
-		let htmlTable = document.getElementById(this.id).getElementsByTagName("table")[1];
-		for(let i = 1; i < htmlTable.rows.length; ++i){
+		let ret = [];
+		
+		for(let i = 0; i < this.data.length; ++i){
 			let show = true;
 			for(let filterID = 0; filterID < this.filters.length; ++filterID){
-				if(this.filters[filterID] !== undefined && htmlTable.rows[i].cells[filterID] !== undefined){
-					if(htmlTable.rows[i].cells[filterID].innerHTML.indexOf(this.filters[filterID]) === -1){
+				if(this.filters[filterID] !== undefined){
+					if(this.data[i][filterID].indexOf(this.filters[filterID]) === -1){
 						show = false;
 						break;
 					}
 				}
 			}
 			if(show){
-				htmlTable.rows[i].style.display = '';
-			}else{
-				htmlTable.rows[i].style.display = 'none';
+				ret.push(this.data[i]);
 			}
 		}
+
+		return ret;
 	}
 	setFilter(filterID, newValue){
 		if(newValue == ""){
@@ -245,32 +247,36 @@ class UI_Table{
 			}
 			ih += '</a>';
 			//filter's input
-			ih += '<input type="text"' + ((this.filters_inputs_visibility) ? '' : ' style="display: none;" ') + 'value="' + this.get_filter(i) +'" onkeydown="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.filter();">';
+			ih += '<input type="text"' + ((this.filters_inputs_visibility) ? '' : ' style="display: none;" ') + 'value="' + this.get_filter(i) +'" onchange="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.updateTable();">';
 			htmlTable.rows[0].cells[i].innerHTML = ih;
 		}
 		
 		
 		//data
-		while(this.data.length - htmlTable.rows.length + 1 > 0){
+		this.filteredData = this.filter();
+		
+		let tmp_start_row = this.show_page_no*this.show_at_once;
+		let tmp_rows_to_show = Math.min(this.filteredData.length-tmp_start_row, this.show_at_once);
+		while(tmp_rows_to_show - htmlTable.rows.length + 1 > 0){
 			htmlTable.appendChild( document.createElement("tr") );
 		}
-		while(this.data.length - htmlTable.rows.length + 1 < 0){
+		while(tmp_rows_to_show - htmlTable.rows.length + 1 < 0){
 			htmlTable.rows[1].remove();
 		}
-		let tmp_start_row = this.show_page_no*this.show_at_once;
-		for(let i = tmp_start_row; i < Math.min(this.data.length, tmp_start_row + this.show_at_once); ++i){
-			while(this.data[i].length - htmlTable.rows[i+1-tmp_start_row].cells.length > 0){
+		for(let i = tmp_start_row; i < Math.min(this.filteredData.length, tmp_start_row + this.show_at_once); ++i){
+			while(this.filteredData[i].length - htmlTable.rows[i+1-tmp_start_row].cells.length > 0){
 				htmlTable.rows[i+1-tmp_start_row].appendChild( document.createElement("td") );
 			}
-			while(this.data[i].length - htmlTable.rows[i+1-tmp_start_row].cells.length < 0){
+			while(this.filteredData[i].length - htmlTable.rows[i+1-tmp_start_row].cells.length < 0){
 				htmlTable.rows[i+1-tmp_start_row].cells[0].remove();
 			}
-			for(let j = 0; j < this.data[i].length; ++j){
-				htmlTable.rows[i+1-tmp_start_row].cells[j].innerHTML = this.data[i][j];
+			for(let j = 0; j < this.filteredData[i].length; ++j){
+				htmlTable.rows[i+1-tmp_start_row].cells[j].innerHTML = this.filteredData[i][j];
 			}
 		}
 		
-		this.filter();
+		//update tableControls' page counter
+		controlTable.getElementsByTagName("td")[4].innerHTML = '<a>' + Math.ceil(this.filteredData.length / this.show_at_once) + '</a>';
 	}
 }
 </script>
