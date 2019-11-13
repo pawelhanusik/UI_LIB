@@ -230,6 +230,7 @@ class UI_Table{
 		}
 		
 		this.filtersChanged = true;
+		this.show_page_no = 0;
 	}
 	
 	updateTable(){
