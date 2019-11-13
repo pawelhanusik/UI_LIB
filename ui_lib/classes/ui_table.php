@@ -65,6 +65,7 @@ class UI_Table{
 		this.filters_inputs_visibility = false;
 		this.filters = [];
 		this.filteredData = [];
+		this.filtersChanged = false;
 	}
 	drawIntoTableId(emptyTableId = this.id){
 		let mainDiv = document.getElementById(emptyTableId);
@@ -115,6 +116,8 @@ class UI_Table{
 		}
 		
 		//data
+		this.filteredData = this.data;
+		
 		for(let i = 0; i < Math.min(this.data.length, this.show_at_once); ++i){
 			htmlTable.appendChild( document.createElement("tr") );
 			for(let j = 0; j < this.data[i].length; ++j){
@@ -195,7 +198,14 @@ class UI_Table{
 	}
 	
 	filter(){
-		let ret = [];
+		//filter data only if filters had changed
+		if(!this.filtersChanged){
+			return;
+		}
+		
+		this.filtersChanged = false;
+		
+		this.filteredData = [];
 		
 		for(let i = 0; i < this.data.length; ++i){
 			let show = true;
@@ -208,11 +218,9 @@ class UI_Table{
 				}
 			}
 			if(show){
-				ret.push(this.data[i]);
+				this.filteredData.push(this.data[i]);
 			}
 		}
-
-		return ret;
 	}
 	setFilter(filterID, newValue){
 		if(newValue == ""){
@@ -220,6 +228,8 @@ class UI_Table{
 		}else{
 			this.filters[filterID] = newValue;
 		}
+		
+		this.filtersChanged = true;
 	}
 	
 	updateTable(){
@@ -253,7 +263,7 @@ class UI_Table{
 		
 		
 		//data
-		this.filteredData = this.filter();
+		this.filter();
 		
 		let tmp_start_row = this.show_page_no*this.show_at_once;
 		let tmp_rows_to_show = Math.min(this.filteredData.length-tmp_start_row, this.show_at_once);
