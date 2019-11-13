@@ -4,6 +4,10 @@ PHP scripts which make creating various UI elements faster and easier.
 
 (right now there's only 1 script - Table)
 
+## Demo
+
+http://pawel.hanusik.pl/projects/UI_LIB/
+
 ## How-to
 
 1. Copy `ui_lib_min` directory into your project
