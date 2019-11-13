@@ -24,6 +24,10 @@
 .ui_table_control td, .ui_table_control th {
 	padding: 6px;
 }
+.ui_table_control td:first-child {
+	border-right: 2px solid #888;
+	cursor: pointer;
+}
 .ui_table tr:nth-child(even) {
 	background-color: #ddd;
 }
@@ -58,6 +62,7 @@ class UI_Table{
 		this.sorted_col = 0;
 		this.sorted_asc = 1; //1 = asc; -1 = desc
 		
+		this.filters_inputs_visibility = false;
 		this.filters = [];
 	}
 	drawIntoTableId(emptyTableId = this.id){
@@ -72,7 +77,10 @@ class UI_Table{
 		tableControls.id = "";
 		tableControls.className = this.classNameControl;//"bordered";
 		let tr = document.createElement("tr");
-		tr.innerHTML = '<td><button onclick="' + this.id + '.prev_page();">&lt;</button></td> \
+		tr.innerHTML = ' \
+			<td onclick="' + this.id + '.change_filters_visibility();"><svg width="5mm" height="5mm" version="1.1" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><metadata><rdf:RDF><cc:Work rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/><dc:title/></cc:Work></rdf:RDF></metadata><g transform="translate(0,-207)"><path d="m83.436 207.58-38.757 67.734-39.28-67.431 39.019-0.15107z" stroke-width=".26458"/><g transform="matrix(1.0029 .047256 -.046672 1.015 -22.678 165)"><path d="m83.329 112.62-21.784 13.937-1.178-25.834 11.481 5.9485z" stroke-width=".26458"/></g><rect x="33.165" y="238.95" width="22.475" height="44.299" stroke-width=".26458"/></g></svg></td>\
+			\
+			<td><button onclick="' + this.id + '.prev_page();">&lt;</button></td> \
 			<td><input type="text" value="' + (this.show_page_no+1) + '" size="' + Math.max(Math.ceil(Math.log10(this.data.length / this.show_at_once)) - 1, 1) + '" onkeyup="if(!isNaN(parseInt(this.value-1)))' + this.id + '.change_page(parseInt(this.value-1));"></td> \
 			<td><a> / </a></td> \
 			<td><a>' + Math.ceil(this.data.length / this.show_at_once) + '</a></td> \
@@ -97,10 +105,8 @@ class UI_Table{
 				ih += ((this.sorted_asc===1) ? " &#x25BD;" : " &#x25B3;");
 			}
 			ih += '</a>';
-			//filter
-			//ih += ' <a onclick="">&#x270D;</a>';
 			//filter's input
-			//ih += '<input type="text" value="' + this.get_filter(i) +'" onkeydown="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.filter();">';
+			ih += '<input type="text" style="display: none;" value="' + this.get_filter(i) +'" onkeydown="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.filter();">';
 			
 			let th = document.createElement("th");
 			th.innerHTML = ih;
@@ -128,6 +134,28 @@ class UI_Table{
 		if( newPage >= 0 && newPage < Math.ceil(this.data.length / this.show_at_once) ){
 			this.show_page_no = newPage;
 			this.updateTable();
+		}
+	}
+	
+	change_filters_visibility(){
+		this.filters_inputs_visibility = !this.filters_inputs_visibility;
+		this.filter_inputs_show(this.filters_inputs_visibility);
+	}
+	filter_inputs_show(show){
+		let style_display = '';
+		let controlTableFilterButton = document.getElementById(this.id).getElementsByTagName("table")[0].getElementsByTagName("td")[0];
+		if(!show){
+			style_display = 'none';
+			controlTableFilterButton.style.backgroundColor = '';
+		}else{
+			controlTableFilterButton.style.backgroundColor = '#0002';
+		}
+		let htmlTable = document.getElementById(this.id).getElementsByTagName("table")[1];
+		for(let cell of htmlTable.rows[0].cells){
+			let input = cell.getElementsByTagName("input")[0];
+			if(input !== undefined){
+				input.style.display = style_display;
+			}
 		}
 	}
 	
@@ -170,8 +198,7 @@ class UI_Table{
 		for(let i = 1; i < htmlTable.rows.length; ++i){
 			let show = true;
 			for(let filterID = 0; filterID < this.filters.length; ++filterID){
-				if(this.filters[filterID] !== undefined){
-					console.log(i);
+				if(this.filters[filterID] !== undefined && htmlTable.rows[i].cells[filterID] !== undefined){
 					if(htmlTable.rows[i].cells[filterID].innerHTML.indexOf(this.filters[filterID]) === -1){
 						show = false;
 						break;
@@ -217,10 +244,8 @@ class UI_Table{
 				ih += ((this.sorted_asc===1) ? " &#x25BD;" : " &#x25B3;");
 			}
 			ih += '</a>';
-			//filter
-			//ih += ' <a onclick="">&#x270D;</a>';
 			//filter's input
-			//ih += '<input type="text" value="' + this.get_filter(i) +'" onkeydown="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.filter();">';
+			ih += '<input type="text"' + ((this.filters_inputs_visibility) ? '' : ' style="display: none;" ') + 'value="' + this.get_filter(i) +'" onkeydown="' + this.id + '.setFilter(' + i + ', this.value); ' + this.id + '.filter();">';
 			htmlTable.rows[0].cells[i].innerHTML = ih;
 		}
 		
