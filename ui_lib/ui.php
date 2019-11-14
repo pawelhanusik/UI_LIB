@@ -1,6 +1,7 @@
 <?php
 $ui_classes = [
-	"ui_table"
+	"ui_table",
+	"ui_progress_bar"
 ];
 
 foreach($ui_classes as $filename){
