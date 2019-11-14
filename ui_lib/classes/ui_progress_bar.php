@@ -68,7 +68,12 @@ class ProgressBar{
 		++$tmp_id;
 		$this->id = 'ui_progress_bar_' . $tmp_id;
 	}
-	public function remove(){
+	public function remove($sleep = 1){
+		if(is_int($sleep)){
+			sleep($sleep);
+		}else{
+			usleep($sleep * 1000000);
+		}
 		echo "<script>" . $this->id .  ".remove();</script>";
 		flush();
 	}
